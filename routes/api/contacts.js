@@ -1,25 +1,21 @@
 const express = require('express')
 
+const ctrl = require('../../controllers/contacts');
+// тут додаємо валідацію на 400-ту помилку
+const { validateBody } = require('../../middlewares/validateBody');
+// імпортуємо схеми валідації
+const { addSchema } = require('../../schemas/contacts');
+
 const router = express.Router()
 
-router.get('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get('/', ctrl.listContacts);
 
-router.get('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get('/:contactId', ctrl.getById);
+// там де треба перевірити тіло ми додаєм validateBody і schemas.addSchema
+router.post('/', validateBody(addSchema), ctrl.addContact);
 
-router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.delete('/:contactId', ctrl.removeContact);
 
-router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
-
-router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.put('/:contactId', validateBody(addSchema), ctrl.updateContact);
 
 module.exports = router
