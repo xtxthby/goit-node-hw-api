@@ -41,12 +41,13 @@ const addContact = async (body) => {
 }
 // функція редагування де перше це айді а друге дані
 const updateContact = async (contactId, body) => {
-  const contacts = await getAll();
+  const contacts = await listContacts();
   const index = contacts.findIndex(item => item.id === contactId);
   if(index === -1){
     return null;
   }
-  contacts[index] = {id: contactId, ...body};
+  const updateContacts = { ...contacts[index], ...body, };
+  contacts[index] = updateContacts;
   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
   return contacts[index];
 }
