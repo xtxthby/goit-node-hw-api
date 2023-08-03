@@ -1,61 +1,54 @@
-// для роботи з async-await
-const fs = require('fs/promises')
-// абсолютний шлях
-const path = require("path");
-// для автоматичного створення id
-const {nanoid} = require("nanoid");
+// витягуэмо  з монгуста схему і модель
+// mongoose перевіряє те що ми зберігаємо в базі
+const { Schema, model } = require("mongoose");
+// Joi перевіряє тіло запиту - те що нам приходить
+const Joi = require("joi");
+// додаємо додаткову функцію помилки 400
+const { handleMongooseError } = require("../helpers");
 
-const contactsPath = path.join(__dirname, "models/contacts.json");
-// функція яка повертає усі контакти
-const listContacts = async () => {
-  const data = await fs.readFile(contactsPath);
-  return JSON.parse(data);
-}
-//  функція для отримання контакта по айді
-const getContactById = async (contactId) => {
-  const contacts = await listContacts();
-  const result = contacts.find(item => item.id === contactId);
-  return result || null;
-}
-// функція видалення
-const removeContact = async (contactId) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex(item => item.id === contactId);
-  if(index === -1){
-    return null;
-  }
-  const [result] = contacts.splice(index, 1);
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return result;
-}
-// функція додавання контакта
-const addContact = async (body) => {
-  const contacts = await listContacts();
-  const newContact = {
-    id: nanoid(),
-    ...body,
-  };
-  contacts.push(newContact);
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return newContact;
-}
-// функція редагування де перше це айді а друге дані
-const updateContact = async (contactId, body) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex(item => item.id === contactId);
-  if(index === -1){
-    return null;
-  }
-  const updateContacts = { ...contacts[index], ...body, };
-  contacts[index] = updateContacts;
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return contacts[index];
-}
+const contactSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Set name for contact"],
+    },
+    email: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    },
+    favorite: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { versionKey: false, timestamps: true }
+);
+// коли при збереженні сталася помилка нехай спрацює
+// ось ця міделвара handleMongooseError
+contactSchema.post("save", handleMongooseError);
+// створюємо модель де перший єлемент це назва колекції
+// другиий аргумент це схема
+const Contact = model("contact", contactSchema);
 
-module.exports = {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-}
+const addSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string(),
+  phone: Joi.string(),
+  favorite: Joi.boolean(),
+});
+// це схема для окремого запиту на зміну поля
+const updateFavoriteSchema = Joi.object({
+  // це одне поле але тепер обовязкове
+  favorite: Joi.boolean().required(),
+});
+
+const schemas = {
+  addSchema,
+  updateFavoriteSchema,
+};
+
+module.exports = { Contact, schemas };
+
+
