@@ -6,6 +6,7 @@ const cors = require('cors');
 // дані DB_HOST, PORT в змінні оточення  process.env
 require("dotenv").config();
 
+const authRouter = require("./routes/api/users");
 const contactsRouter = require('./routes/api/contacts');
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/users", authRouter);
 app.use('/api/contacts', contactsRouter);
 
 app.use((req, res) => {

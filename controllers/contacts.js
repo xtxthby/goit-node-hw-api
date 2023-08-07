@@ -6,12 +6,31 @@ const { Contact } = require("../models/contacts");
 const { HttpError, ctrlWrapper } = require("../helpers");
 
 const listContacts = async (req, res) => {
-  const result = await Contact.find({}, "-createdAt -updatedAt");
+  // інформація про те хто робить запит
+  const { _id: owner } = req.user;
+  const searchParams = {
+    owner,
+  };
+  // нам треба звернутися до req.query (тут є всі параметри пошуку)
+  const { page = 1, limit = 20, favorite } = req.query;
+  // це свого роду пагінація і skip ми вираховуємо самі
+  const skip = (page - 1) * limit;
+  // перевірка
+  if (typeof favorite === "undefined") {
+    delete searchParams.favorite;
+  } else {
+    searchParams.favorite = favorite;
+  }
+  const result = await Contact.find({}, "-createdAt -updatedAt",
+    { skip, limit }).populate("owner", "email");
   res.json(result);
 };
 
 const addContact = async (req, res) => {
-  const result = await Contact.create(req.body);
+  // при додавання контакта ми з req.user беремо айді людини яка робить запит
+  // і одразу переіменовуємо в owner 
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 };
 
@@ -62,7 +81,7 @@ const updateFavorite = async (req, res) => {
 };
 
 module.exports = {
-    // під час експорту загортаємо в контролер
+  // під час експорту загортаємо в контролер
   listContacts: ctrlWrapper(listContacts),
   addContact: ctrlWrapper(addContact),
   getById: ctrlWrapper(getById),

@@ -22,6 +22,16 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    // owner - це власник або людина яка додала контакт
+    // і кожен користувач бачить тільки свої контакти
+    owner: {
+      // щоб вказати айді треба за допомогою монгодб
+      // генерувати його і зробити таку запис
+      type: Schema.Types.ObjectId,
+      // тут записують властивість ref в яку записують назву
+      // з якої колекції це айді
+      ref: "user",
+    },
   },
   { versionKey: false, timestamps: true }
 );
