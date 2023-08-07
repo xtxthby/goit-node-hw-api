@@ -1,7 +1,7 @@
 // із ройтес арі переносимо сюди запити
 // переносимо сюди функції запиту
 // імпортуємо в однині Contact
-const { Contact } = require("../models/contacts");
+const { Contact } = require("../models");
 // сюди імпортуємо функцію HttpError i ctrlWrapper
 const { HttpError, ctrlWrapper } = require("../helpers");
 
@@ -12,7 +12,7 @@ const listContacts = async (req, res) => {
     owner,
   };
   // нам треба звернутися до req.query (тут є всі параметри пошуку)
-  const { page = 1, limit = 20, favorite } = req.query;
+  const { page = 1, limit = 20, favorite, email, name } = req.query;
   // це свого роду пагінація і skip ми вираховуємо самі
   const skip = (page - 1) * limit;
   // перевірка
@@ -20,7 +20,17 @@ const listContacts = async (req, res) => {
     delete searchParams.favorite;
   } else {
     searchParams.favorite = favorite;
-  }
+  };
+    if (typeof email === "undefined") {
+    delete searchParams.email;
+  } else {
+    searchParams.email =email;
+  };
+  if (typeof name === "undefined") {
+    delete searchParams.name;
+  } else {
+    searchParams.name =name;
+  };
   const result = await Contact.find({}, "-createdAt -updatedAt",
     { skip, limit }).populate("owner", "email");
   res.json(result);
