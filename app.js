@@ -14,6 +14,7 @@ const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
 // міделвари
 app.use(logger(formatsLogger));
+// щоб обмежити доступ є налаштування для cors()
 app.use(cors());
 app.use(express.json());
 
