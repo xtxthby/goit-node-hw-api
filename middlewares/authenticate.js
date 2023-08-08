@@ -6,7 +6,7 @@ const { User } = require("../models");
 // зі змінних оточення забираємо ключ
 const { SECRET_KEY } = process.env;
 
-const authenticate = async (req, res, next) => {
+const authenticate = async (req, _, next) => {
     // дістаємо заголовок із хедера
     const { authorization = "" } = req.headers;
     // Розділяємо  authorization на два слова по пробілу
