@@ -23,4 +23,4 @@ mongoose.connect(DB_HOST).then(() => {
 });
 
 
-
+// mongodb+srv://Yurii:iqLVRzanZKyF2yr@cluster0.zmwtzrh.mongodb.net/db-contacts?retryWrites=true&w=majority

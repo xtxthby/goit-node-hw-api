@@ -1,7 +1,7 @@
 // // імпортуємо функцію isValidObjectId
 const { isValidObjectId } = require("mongoose");
 const { HttpError } = require("../helpers");
-
+// це функція на перевірку валідності самого айді
 const isValidId = (req, _, next) => {
     const { contactId } = req.params;
     // передаємо в функцію щось що може бути айді
