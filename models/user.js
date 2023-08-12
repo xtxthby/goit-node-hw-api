@@ -27,20 +27,22 @@ const userSchema = new Schema(
         },
     // оновлення
     subscription: {
-        type: String,
+      type: String,
+      // приймає масив
         enum: {
-            values: [...SUBSCRIPTIONS],
-            message: `have only ${SUBSCRIPTIONS.join(", ")}`,
+          values: [...SUBSCRIPTIONS],
+          message: `have only ${SUBSCRIPTIONS.join(", ")}`,
         },
 
         default: "starter",
     },
+    avatarURL: String,
     // щоб зберегти токін  додаєм його сюди
     token: String,
   },
   { versionKey: false, timestamps: true }
 );
-
+// якщо валідація не пройдена - буде викидати помилку
 userSchema.post("save", handleMongooseError);
 const User = model("user", userSchema);
 // Joi схема на регістрацію

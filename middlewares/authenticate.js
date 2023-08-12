@@ -2,6 +2,7 @@
 const jwt = require("jsonwebtoken");
 
 const { HttpError } = require("../helpers");
+// імпортуємо модель юзер для перевірки чи є людина в базі
 const { User } = require("../models");
 // зі змінних оточення забираємо ключ
 const { SECRET_KEY } = process.env;
@@ -12,6 +13,7 @@ const authenticate = async (req, _, next) => {
     // Розділяємо  authorization на два слова по пробілу
     const [bearer, token] = authorization.split(" ");
     // перша перевірка на наявність слова Bearer
+    // в даному випадку перериває next функцію
     if (bearer !== "Bearer" || !token) next(HttpError(401));
     // перевіряємо токін за допомогою бібліотеки jsonwebtoken
     try {

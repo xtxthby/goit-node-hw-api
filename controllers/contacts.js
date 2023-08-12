@@ -11,7 +11,7 @@ const listContacts = async (req, res) => {
   const searchParams = {
     owner,
   };
-  // нам треба звернутися до req.query (тут є всі параметри пошуку)
+  // нам треба звернутися до ==req.query== (тут є всі параметри пошуку)
   const { page = 1, limit = 20, favorite, email, name } = req.query;
   // це свого роду пагінація і skip ми вираховуємо самі
   const skip = (page - 1) * limit;
@@ -40,6 +40,7 @@ const addContact = async (req, res) => {
   // при додавання контакта ми з req.user беремо айді людини яка робить запит
   // і одразу переіменовуємо в owner 
   const { _id: owner } = req.user;
+  // тепер одавання контакту буде закріплено за певною людиною
   const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 };
