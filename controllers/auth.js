@@ -1,12 +1,22 @@
 // міделвара ідентифікації
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+//  для тимчасової аватарки ми викликаємо
+//  встановленний пакет gravatar
+const gravatar = require("gravatar");
+const path = require("path");
+const fs = require("fs/promises");
+// пакет для обробки аватарки
+const Jimp = require("jimp");
 
-const {User} = require("../models/user");
+
+const {User} = require("../models");
 
 const {HttpError, ctrlWrapper} = require("../helpers");
 // зі змінних оточення забираємо ключ
 const { SECRET_KEY } = process.env;
+// тут шлях до папки з аватарками з підняттям на одну папку в гору
+const avatarDir = path.join(__dirname, "../", "public", "avatars");
 // створюємо перший контролер регістрації
 const register = async (req, res) => {
     const { email, password } = req.body;
@@ -17,7 +27,7 @@ const register = async (req, res) => {
     if (user) throw HttpError(409, "Email in use");
     //  хешуємо пароль перед зберіганням
     const hashPass = await bcrypt.hash(password, 10);
-     //  створюємо нового сористувача
+     //  створюємо нового сористувача пароль зберігаємо в захешованому вигляді
     const newUser = await User.create({ ...req.body, password: hashPass });
     // те що отримуємо
     res.status(201).json({
@@ -40,10 +50,11 @@ const login = async (req, res) => {
     const passCompare = await bcrypt.compare(password, user.password);
     // .якщо не співпадають то викидаємо помилку
     if (!passCompare) throw HttpError(401, "Email or password is wrong");
-    // створюємо payload
+    // створюємо payload де зазвичай айді користувача
     const payload = {
         id: user._id,
     };
+    // sign-це метод підпис
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "12h" });
     // під час логіну ми не тільки відсилаємо токен 
     // на фронтенд ми записуємо його в базі
@@ -57,7 +68,7 @@ const login = async (req, res) => {
         },
     });
 };
-// якщо токен валідний по відсилаємо  імейл і підписку
+// якщо токен валідний то відсилаємо  імейл і підписку
 const getCurrent = async (req, res) => {
     // достаємо всю інформацію яка потрібна із req.user
     const { email, subscription } = req.user;
@@ -75,26 +86,63 @@ const logout = async (req, res) => {
 };
 
 const updateSubscription = async (req, res) => {
-  const { _id } = req.user;
+    const { _id } = req.user;
 
-  if (!req.body) throw HttpError(400, "missing field subscription");
+    if (!req.body) throw HttpError(400, "missing field subscription");
 
-  const { email, subscription } = await User.findByIdAndUpdate(_id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!email || !subscription) throw HttpError(404, "Not found");
+    const { email, subscription } = await User.findByIdAndUpdate(_id, req.body, {
+        new: true,
+        runValidators: true,
+    });
+    if (!email || !subscription) throw HttpError(404, "Not found");
 
-  res.status(201).json({ email, subscription });
+    res.status(201).json({ email, subscription });
+};
+
+const updAvatar = async (req, res) => {
+    // витягуємо айді користувача який робить запит
+    const { _id } = req.user;
+
+    if (!req.file) throw HttpError(400, "missing field avatar");
+    // з файлу витякуємо шлях до зображення і назву
+    const { path: tempUpload, originalname } = req.file;
+    // Jimp.read читає шлях передаємо в then- (img) і за допомогою метода
+    // resize задаємо розмір , після цього зберігаємо в файлі
+    await Jimp.read(tempUpload).then((img) =>
+        img.resize(250, 250).write(`${tempUpload}`)
+    );
+    // для того щоб аватарка була унікальною ми додаємо айді
+    // а імя залишаємо старе і таким чином можна зберігати в 
+    // одному файлі усі аватарки
+    const fileName = `${_id}_${originalname}`;
+    // створюємо шлях де він має зберігатися де avatarDir шлях до 
+    // папки з аватарками
+    const resultUpload = path.join(avatarDir, fileName);
+    // за допомогою  fs.rename переміщюємо з 
+    // тимчасового tempUpload в resultUpload
+    await fs.rename(tempUpload, resultUpload);
+    // тепер цей шлях записуємо в базу
+    const avatarURL = path.join("avatars", fileName);
+    // тепет знаючи айді ми перезаписуємо аватар 
+    await User.findByIdAndUpdate(_id, { avatarURL });
+
+    if (!avatarURL) throw HttpError(404, "Not found");
+    //  повертаємо
+    res.json({ avatarURL });
 };
 
 
 
 
+
+
+
+
 module.exports = {
-  register: ctrlWrapper(register),
-  login: ctrlWrapper(login),
-  logout: ctrlWrapper(logout),
-  getCurrent: ctrlWrapper(getCurrent),
-  updateSubscription: ctrlWrapper(updateSubscription),
+    register: ctrlWrapper(register),
+    login: ctrlWrapper(login),
+    logout: ctrlWrapper(logout),
+    getCurrent: ctrlWrapper(getCurrent),
+    updateSubscription: ctrlWrapper(updateSubscription),
+    updAvatar: ctrlWrapper(updAvatar),
 };

@@ -2,12 +2,12 @@ const express = require("express");
 
 const ctrl = require("../../controllers/auth");
 // імпортуємо аутетифікацію і прописуємо в маршруті який нам необхідно
-const { validateBody, authenticate } = require("../../middlewares");
+const { validateBody, authenticate, upload } = require("../../middlewares");
 
 const { userSchemas } = require("../../models");
-
+// створюємо router обєкт
 const router = express.Router();
-// signup
+// signup маршрут на регістрацію
 router.post("/register", validateBody(userSchemas.registerSchema), ctrl.register);
 // signin
 router.post("/login", validateBody(userSchemas.loginSchema), ctrl.login);
@@ -23,5 +23,11 @@ router.patch(
   validateBody(userSchemas.updSubscriptionSchema),
   ctrl.updateSubscription
 );
+// тут ми даємо можливість людині змінити аватарку яка залогінелась (authenticate)
+// це буде єдине поле з файлом аватар і обробимо контролером
+router.patch("/avatars", authenticate, upload.single("avatar"), ctrl.updAvatar);
 
 module.exports = router;
+
+
+// QQYiZWNQJgIizYUq

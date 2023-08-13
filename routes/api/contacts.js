@@ -15,10 +15,9 @@ router.get('/:contactId', authenticate, isValidId, ctrl.getById);
 // там де треба перевірити тіло ми додаєм validateBody і schemas.addSchema
 router.post('/', authenticate, validateBody(schemas.addSchema), ctrl.addContact);
 
-router.delete('/:contactId', authenticate, isValidId, ctrl.removeContact);
-
-
 router.put('/:contactId', authenticate, isValidId, validateBody(schemas.addSchema), ctrl.updateContact);
+
+router.delete('/:contactId', authenticate, isValidId, ctrl.removeContact);
 
 router.patch(
   "/:contactId/favorite",
