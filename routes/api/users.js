@@ -16,7 +16,17 @@ router.post("/logout", authenticate, ctrl.logout);
 // при get запиті ми перевіряємо чи людина залогінена якщо да 
 // getCurrent відішле імеіл та імя
 router.get("/current", authenticate, ctrl.getCurrent);
-
+// після регістрації створюємо роутер  с гет запросом де остання 
+// частина дінамічна де зберігається веріфікейшинтокін
+router.get("/verify/:verificationToken", ctrl.verifyEmail);
+// це окремий маршрут для повторного запиту якщо не прийшов лист з підтведженням
+// там буде тільки поле з імейлом де ми далі проводимо валідацію імейла
+// якщо все добре викликаємо контролер
+router.post(
+  "/verify",
+  validateBody(userSchemas.emailSchema),
+  ctrl.resendVerifyEmail
+);
 router.patch(
   "/",
   authenticate,

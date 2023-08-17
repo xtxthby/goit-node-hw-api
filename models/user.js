@@ -39,6 +39,16 @@ const userSchema = new Schema(
     avatarURL: String,
     // щоб зберегти токін  додаєм його сюди
     token: String,
+    // це поле відповідає за підтвердження імейлу
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    // це код підтвердження
+    verificationToken: {
+      type: String,
+      required: [true, "Verify token is required"],
+    },
   },
   { versionKey: false, timestamps: true }
 );
@@ -72,11 +82,19 @@ const loginSchema = Joi.object({
 const updSubscriptionSchema = Joi.object({
   subscription: Joi.string().required(),
 });
+// схема підтвердження імейлу
+const emailSchema = Joi.object({
+  email: Joi.string().pattern(EMAIL_REGEX).required().messages({
+    "string.pattern.base":
+      "Email may contain letters, numbers, an apostrophe, and must be followed by '@' domain name '.' domain suffix. For example Taras@ukr.ua, adrian@gmail.com, JacobM3rcer@hotmail.com",
+  }),
+});
 
 const userSchemas = {
   registerSchema,
   loginSchema,
   updSubscriptionSchema,
+  emailSchema,
 };
 
 module.exports = { User, userSchemas };
